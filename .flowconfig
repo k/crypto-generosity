@@ -1,0 +1,17 @@
+[ignore]
+<PROJECT_ROOT>/node_modules/findup/test/fixture/.*
+
+[include]
+
+[libs]
+<PROJECT_ROOT>/flow-bin/.*
+
+[lints]
+
+[options]
+module.name_mapper='.*\(.md\)' -> 'empty/object'
+module.use_strict=true
+module.name_mapper.extension='gql' -> '<PROJECT_ROOT>/src/document_node'
+suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe
+esproposal.export_star_as=enable
+experimental.const_params=true
