@@ -18,7 +18,7 @@ import BigNumber from 'bignumber';
 declare module 'web3' {
 
     declare type numberOrBig = number | BigNumber;
-    declare type EthInput = string | numberOrBig | Object;
+    declare type EthInput = string | numberOrBig;
 
     declare interface Provider {
         isConnected(): boolean;
@@ -85,16 +85,26 @@ declare module 'web3' {
         uncles: Array<string>,
     };
 
+    declare type Transaction = {
+        from: string,
+        to: string,
+        value: number | string | BigNumber,
+        gas: number | string | BigNumber,
+        gasPrice: number | string | BigNumber,
+        data: string,
+        nonce: number
+    }
+
     declare class Eth {
         iban: Iban;
         defaultBlock: mixed;
         defaultAccount: mixed;
 
         // methods
-        getBalance(address: string, defaultBlockNumber: mixed, callback: (error: ?Error, result: mixed) => void): BigNumber;
+        getBalance(address: string, defaultBlockNumber: number, callback: (error: ?Error, result: BigNumber) => void): void | BigNumber;
         getStorageAt(i1: mixed, i2: string| number| Object, defaultBlockNumber: number): mixed;
         getCode(): mixed;
-        getBlock(number: numberOrBig, callback: (error: ?Error, result: mixed) => void): Block;
+        getBlock(number: numberOrBig, callback: (error: ?Error, result: Block) => void): void | Block;
         getUncle(): mixed;
         getCompilers(): mixed;
         getBlockTransactionCount(): mixed;
@@ -106,7 +116,7 @@ declare module 'web3' {
         call(): mixed;
         estimateGas(): mixed;
         sendRawTransaction(): mixed;
-        signTransaction(): mixed;
+        signTransaction(t: Transaction, cb: (err: ?Error, txHash: string) => void): void | string;
         sendTransaction(): mixed;
         sign(): mixed;
         compileSolidity(): mixed;

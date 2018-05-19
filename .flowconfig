@@ -2,6 +2,7 @@
 <PROJECT_ROOT>/node_modules/findup/test/fixture/.*
 
 [include]
+<PROJECT_ROOT>/src/.*
 
 [libs]
 <PROJECT_ROOT>/flow-bin/.*

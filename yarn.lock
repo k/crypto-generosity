@@ -3113,9 +3113,9 @@ flatten@^1.0.2:
   version "1.0.2"
   resolved "https://www.myget.org/F/adsontop-packages/npm/flatten/-/flatten-1.0.2.tgz#dae46a9d78fbe25292258cc1e780a41d95c03782"
 
-flow-bin@^0.68.0:
-  version "0.68.0"
-  resolved "https://www.myget.org/F/adsontop-packages/npm/flow-bin/-/flow-bin-0.68.0.tgz#86c2d14857d306eb2e85e274f2eebf543564f623"
+flow-bin@^0.72.0:
+  version "0.72.0"
+  resolved "https://www.myget.org/F/adsontop-packages/npm/flow-bin/-/flow-bin-0.72.0.tgz#12051180fb2db7ccb728fefe67c77e955e92a44d"
 
 for-each@^0.3.2, for-each@~0.3.2:
   version "0.3.2"
