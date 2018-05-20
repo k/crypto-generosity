@@ -96,7 +96,6 @@ class App extends Component<{}, AppState> {
                 web3.eth.getAccounts(async (error, accounts) => {
                     const result = await instance.reputation.call(accounts[0]);
                     const gifts = await instance.pendingWithdrawals.call(accounts[0]);
-                    debugger;
                     this.setState({ repValue: result.c[0], gifts: gifts.c[0] });
                 });
             }, 100);
