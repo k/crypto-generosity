@@ -10,26 +10,31 @@ import "./css/pure-min.css";
 import "./App.css";
 
 const GIVE_AMOUNT = 10000000000000000;
+const RAKE = GIVE_AMOUNT / 100; // For paying contract gas prices
+const NET = GIVE_AMOUNT - RAKE;
 
 type TestEvent = {
-    _to: string,
-    _from: string,
-    _value: number
+    curr: string,
 };
+
+type MappingCall = { call: string => { c: Array<number> } };
 
 type GenerosityContractType = {
     setProvider: Object => void,
     deployed: () => Promise<{
-        Test: ((?Error, ?TestEvent) => void) => void,
         give: (string, Object) => void,
-        reputation: { call: string => { c: Array<number> } }
+        reputation: MappingCall,
+        pendingWithdrawals: MappingCall,
+        withdraw: (Object) => void,
+        Test: (?Object, ?Object, ?(error: Error, event: TestEvent) => void) => { watch: Function },
     }>
 };
 
 type AppState = {
     repValue: number,
     generosity: ?GenerosityContractType,
-    web3: ?Object
+    web3: ?Object,
+    gifts: number,
 };
 
 class App extends Component<{}, AppState> {
@@ -39,7 +44,8 @@ class App extends Component<{}, AppState> {
         this.state = {
             repValue: 0,
             generosity: null,
-            web3: null
+            web3: null,
+            gifts: 0,
         };
     }
 
@@ -81,14 +87,17 @@ class App extends Component<{}, AppState> {
 
         this.setState({ generosity });
         generosity.deployed().then(instance => {
-            instance.Test((error: ?Error, result: ?TestEvent) => {
-                console.error(error);
-                console.log(result);
+            instance.allEvents().watch(
+            (err, event) => {
+                err && console.error(err);
+                event && console.log(event);
             });
             setInterval(() => {
                 web3.eth.getAccounts(async (error, accounts) => {
                     const result = await instance.reputation.call(accounts[0]);
-                    this.setState({ repValue: result.c[0] });
+                    const gifts = await instance.pendingWithdrawals.call(accounts[0]);
+                    debugger;
+                    this.setState({ repValue: result.c[0], gifts: gifts.c[0] });
                 });
             }, 100);
         });
@@ -121,10 +130,19 @@ class App extends Component<{}, AppState> {
                 })
                 .then(result => {
                     // Update state with the result.
-                    console.log(result);
                     return this.setState({ repValue: result.c[0] });
                 });
         });
+    };
+
+    handleWithdraw = () => {
+        // Get accounts.
+        const { web3, generosity } = this.state;
+        if (web3 == null || generosity == null) return;
+        web3.eth.getAccounts(async (error, accounts): * => {
+            const instance = await generosity.deployed();
+            instance.withdraw({ from: accounts[0], gas: 52000 });
+        })
     };
 
     handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
@@ -156,8 +174,10 @@ class App extends Component<{}, AppState> {
                                     placeholder="Enter target address here"
                                     style={{ minWidth: '250px' }}
                                 />
-                                <input type="submit" />
+                                <input type="submit" value="Send" />
                             </form>
+                            <p>You have {this.state.gifts ? 'a gift to receive!' : 'no gifts.'}</p>
+                            <button onClick={this.handleWithdraw}>Receive</button>
                         </div>
                     </div>
                 </main>

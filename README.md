@@ -10,14 +10,13 @@ This contract provides facilities for sending gifts to people and in the form of
 
 - [x] Modify UI to show rep and take in address for giving
 - [x] Change SimpleStorage -> Generosity contract which logs generosity
-- [ ] Switch the reputation gain to be on receipt of the gift
-     - [ ] Create input for receiving a gift
-     - [ ] Add receive contract call
+- [x] Prevent sending to the same identity
+- [x] Add withdraw contract call
 - [ ] Use some form of identity on the blockchain to verify the givers and receivers
-- [ ] Prevent sending to the same identity
+- [ ] ~Switch the reputation gain to be on receipt of the gift~ [requires contract to be able to pay cost](https://blog.ethereum.org/2015/12/24/understanding-serenity-part-i-abstraction/)
 
 ## Optimizations
-- [ ] Move updating reputation to a separate function which pulls from contract funds so gas price doesn't increase too much
+- [ ] ~Move updating reputation to a separate function which pulls from contract funds so gas price doesn't increase too much~ [requires contract to be able to pay cost](https://blog.ethereum.org/2015/12/24/understanding-serenity-part-i-abstraction/)
 
 ## Potential Features
 - [ ] Require a message to be typed and sent
