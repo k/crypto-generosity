@@ -7,8 +7,20 @@ pragma solidity ^0.4.21;
 contract Generosity {
     event Test( address curr, uint amount );
     mapping (address => address) public receiverToGiver;
-    mapping (address => uint) public giverToReputation;
     mapping (address => uint) public pendingWithdrawals;
+
+    // @notice these for a linked list to store all keys
+    mapping (address => address) public llIndex;
+
+    function add(address _addr) private
+    {
+        if (llIndex[0x0] == 0) {
+            llIndex[_addr] = 0x0;
+        } else {
+            llIndex[_addr] = llIndex[0x0];
+        }
+        llIndex[0x0] = _addr;
+    }
 
     uint GIVE_AMOUNT = 10000000000000000;
     uint RAKE = GIVE_AMOUNT / 100; // For paying contract gas prices
@@ -21,22 +33,10 @@ contract Generosity {
         require(receiverToGiver[msg.sender] != to, 'cannot return to sender');
         receiverToGiver[to] = msg.sender;
         pendingWithdrawals[to] = NET;
-        updateRep();
-    }
-
-    // @dev update to use gas from contract to updateRep
-    function updateRep() private {
-        address curr = receiverToGiver[msg.sender];
-        while (curr != 0) {
-            giverToReputation[curr] += 1;
-            curr = receiverToGiver[curr];
+        if (llIndex[msg.sender] == 0) {
+            add(msg.sender);
         }
-    }
-
-    // @param address to access reputation of
-    // @return the number of people reached by the address
-    function reputation(address ad) public view returns (uint) {
-        return giverToReputation[ad];
+        add(to);
     }
 
     // @notice Used to access the gifted ETH
