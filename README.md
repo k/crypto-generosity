@@ -6,6 +6,19 @@ Lets see how far your generosity reaches.
 
 This contract provides facilities for sending gifts to people and in the form of a small amount of ethereum and a kind message.
 
+### Getting Started
+
+#### Requirements
+- yarn (`npm install -g yarn`)
+- truffle v4.1+ (`npm install -g truffle@^4.1`)
+- MetaMask/Mist wallet to inject web3
+
+1. Run `yarn` to install deps
+1. Start Ganache or `truffle develop`
+1. `truffle deploy` to deploy contract
+1. `yarn start` to start react app
+1. Ensure MetaMask/Mist is setup to talk to the correct local blockchain
+
 ## Roadmap
 
 - [x] Modify UI to show rep and take in address for giving
