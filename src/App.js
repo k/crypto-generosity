@@ -10,31 +10,36 @@ import "./css/pure-min.css";
 import "./App.css";
 
 const GIVE_AMOUNT = 10000000000000000;
+const GIVE_GAS = 150000;
+const WITHDRAW_GAS = 52000;
 const RAKE = GIVE_AMOUNT / 100; // For paying contract gas prices
 const NET = GIVE_AMOUNT - RAKE;
 
-type TestEvent = {
-    curr: string,
+type MappingCallNumber = { call: string => { c: Array<number> } };
+type MappingCallAddress = { call: string => Promise<string> };
+
+type GenerosityInstanceType = {
+        give: (string, Object) => void,
+        pendingWithdrawals: MappingCallNumber,
+        receiverToGiver: MappingCallAddress,
+        llIndex: { call: (string) => Promise<string> },
+        withdraw: Object => void,
+        allEvents: (
+            ?Object,
+            ?Object,
+            ?(error: Error, event: mixed) => void
+        ) => { watch: Function }
 };
-
-type MappingCall = { call: string => { c: Array<number> } };
-
 type GenerosityContractType = {
     setProvider: Object => void,
-    deployed: () => Promise<{
-        give: (string, Object) => void,
-        reputation: MappingCall,
-        pendingWithdrawals: MappingCall,
-        withdraw: (Object) => void,
-        Test: (?Object, ?Object, ?(error: Error, event: TestEvent) => void) => { watch: Function },
-    }>
+    deployed: () => Promise<GenerosityInstanceType>,
 };
 
 type AppState = {
-    repValue: number,
+    reach: number,
     generosity: ?GenerosityContractType,
     web3: ?Object,
-    gifts: number,
+    gifts: number
 };
 
 class App extends Component<{}, AppState> {
@@ -42,10 +47,10 @@ class App extends Component<{}, AppState> {
         super(props);
 
         this.state = {
-            repValue: 0,
+            reach: 0,
             generosity: null,
             web3: null,
-            gifts: 0,
+            gifts: 0
         };
     }
 
@@ -84,65 +89,83 @@ class App extends Component<{}, AppState> {
             throw new Error("Web 3 must be defined");
         }
         generosity.setProvider(web3.currentProvider);
-
-        this.setState({ generosity });
-        generosity.deployed().then(instance => {
-            instance.allEvents().watch(
-            (err, event) => {
-                err && console.error(err);
-                event && console.log(event);
-            });
-            setInterval(() => {
-                web3.eth.getAccounts(async (error, accounts) => {
-                    const result = await instance.reputation.call(accounts[0]);
-                    const gifts = await instance.pendingWithdrawals.call(accounts[0]);
-                    this.setState({ repValue: result.c[0], gifts: gifts.c[0] });
+        this.setState({ generosity }, () => {
+            this.web3Call((accounts, instance): * => {
+                instance.allEvents().watch((err, event) => {
+                    err && console.error(err);
+                    event && console.log(event);
                 });
-            }, 100);
-        });
+            });
 
-        // Declaring this for later so we can chain functions on SimpleStorage.
+            setInterval(() => {
+                this.web3Call(async (accounts, instance) => {
+                    const gifts = await instance.pendingWithdrawals.call(
+                        accounts[0]
+                    );
+                    const reach = await this.readReach(accounts[0], instance);
+                    this.setState({ reach, gifts: gifts.c[0] });
+                });
+            }, 1000);
+        });
     }
 
-    giveToAddress = (address: string) => {
-        var generosityInstance;
-
-        // Get accounts.
+    web3Call = async (
+        func: (
+            accounts: Array<string>,
+            generosityInstance: GenerosityInstanceType,
+        ) => void | Promise<void>
+    ): Promise<void> => {
         const { web3, generosity } = this.state;
-        if (web3 == null || generosity == null) return;
-        web3.eth.getAccounts((error, accounts) => {
-            generosity
-                .deployed()
-                .then(instance => {
-                    generosityInstance = instance;
+        if (web3 == null || generosity == null)
+            throw new Error("Web3 or contract not ready");
+        web3.eth.getAccounts(async (error, accounts): Promise<void> => {
+            const instance = await generosity.deployed();
+            func(accounts, instance);
+        });
+    };
 
-                    // Stores a given value, 5 by default.
-                    return generosityInstance.give(address, {
-                        from: accounts[0],
-                        value: GIVE_AMOUNT,
-                        gas: 1000000
-                    });
-                })
-                .then(result => {
-                    // Get the value from the contract to prove it worked.
-                    return generosityInstance.reputation.call(accounts[0]);
-                })
-                .then(result => {
-                    // Update state with the result.
-                    return this.setState({ repValue: result.c[0] });
-                });
+    giveToAddress = (address: string) => {
+        // Get accounts.
+        this.web3Call(async (accounts, generosityInstance) => {
+            await generosityInstance.give(address, {
+                from: accounts[0],
+                value: GIVE_AMOUNT,
+                gas: GIVE_GAS
+            });
+            const reach = await this.readReach(accounts[0], generosityInstance);
+            this.setState({ reach });
         });
     };
 
     handleWithdraw = () => {
         // Get accounts.
-        const { web3, generosity } = this.state;
-        if (web3 == null || generosity == null) return;
-        web3.eth.getAccounts(async (error, accounts): * => {
-            const instance = await generosity.deployed();
-            instance.withdraw({ from: accounts[0], gas: 52000 });
-        })
+        this.web3Call((accounts, instance) => {
+            instance.withdraw({ from: accounts[0], gas: WITHDRAW_GAS });
+        });
     };
+
+    /**
+     * NOTE: This algorithm is roughly O(n^2) b = branching factor ~ 3. worst case
+     *       In the future this should be cached off-chain by subscribing to transactions with this
+     *       conract address.
+     */
+    readReach = async (addr: string, instance: GenerosityInstanceType): Promise<number> => {
+        const first = await instance.llIndex.call("0x0");
+        let curr = first;
+        if (0 === parseInt(curr)) {
+            return 0;
+        }
+        let reach: number = 0;
+        do {
+            let giver = await instance.receiverToGiver.call(curr);
+            if (giver === addr) {
+                reach += 1;
+                reach += await this.readReach(curr, instance);
+            }
+            curr = await instance.llIndex.call(curr);
+        } while (curr !== first);
+        return reach
+    }
 
     handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
         if (this.addressInput != null) {
@@ -163,7 +186,10 @@ class App extends Component<{}, AppState> {
                 <main className="container">
                     <div className="pure-g">
                         <div className="pure-u-1-1">
-                            <p>Your generosity has reached {this.state.repValue} person(s);</p>
+                            <p>
+                                Your generosity has reached{" "}
+                                {this.state.reach} person(s);
+                            </p>
                             <form onSubmit={this.handleSubmit}>
                                 <input
                                     ref={(el: ?HTMLInputElement) => {
@@ -171,12 +197,19 @@ class App extends Component<{}, AppState> {
                                     }}
                                     name="address"
                                     placeholder="Enter target address here"
-                                    style={{ minWidth: '250px' }}
+                                    style={{ minWidth: "250px" }}
                                 />
                                 <input type="submit" value="Send" />
                             </form>
-                            <p>You have {this.state.gifts ? 'a gift to receive!' : 'no gifts.'}</p>
-                            <button onClick={this.handleWithdraw}>Receive</button>
+                            <p>
+                                You have{" "}
+                                {this.state.gifts
+                                    ? "a gift to receive!"
+                                    : "no gifts."}
+                            </p>
+                            <button onClick={this.handleWithdraw}>
+                                Receive
+                            </button>
                         </div>
                     </div>
                 </main>
