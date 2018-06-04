@@ -1,13 +1,14 @@
 /* @flow */
 
 import React, { Component } from "react";
+import "antd/dist/antd.css";
+import { Layout, Button, Menu, Icon, Tooltip } from "antd";
+
+import { GenerosityForm, HomeIcon } from "./components";
 import GenerosityContract from "../build/contracts/Generosity.json";
 import getWeb3 from "./utils/getWeb3";
 
-import "./css/oswald.css";
-import "./css/open-sans.css";
-import "./css/pure-min.css";
-import "./App.css";
+const { Header, Content, Footer } = Layout;
 
 const GIVE_AMOUNT = 10000000000000000;
 const GIVE_GAS = 150000;
@@ -19,27 +20,28 @@ type MappingCallNumber = { call: string => { c: Array<number> } };
 type MappingCallAddress = { call: string => Promise<string> };
 
 type GenerosityInstanceType = {
-        give: (string, Object) => void,
-        pendingWithdrawals: MappingCallNumber,
-        receiverToGiver: MappingCallAddress,
-        llIndex: { call: (string) => Promise<string> },
-        withdraw: Object => void,
-        allEvents: (
-            ?Object,
-            ?Object,
-            ?(error: Error, event: mixed) => void
-        ) => { watch: Function }
+    give: (string, Object) => void,
+    pendingWithdrawals: MappingCallNumber,
+    receiverToGiver: MappingCallAddress,
+    llIndex: { call: string => Promise<string> },
+    withdraw: Object => void,
+    allEvents: (
+        ?Object,
+        ?Object,
+        ?(error: Error, event: mixed) => void
+    ) => { watch: Function }
 };
 type GenerosityContractType = {
     setProvider: Object => void,
-    deployed: () => Promise<GenerosityInstanceType>,
+    deployed: () => Promise<GenerosityInstanceType>
 };
 
 type AppState = {
     reach: number,
     generosity: ?GenerosityContractType,
     web3: ?Object,
-    gifts: number
+    gifts: number,
+    current: "reach" | "give" | "receive"
 };
 
 class App extends Component<{}, AppState> {
@@ -50,11 +52,10 @@ class App extends Component<{}, AppState> {
             reach: 0,
             generosity: null,
             web3: null,
-            gifts: 0
+            gifts: 0,
+            current: "give"
         };
     }
-
-    addressInput: ?HTMLInputElement = null;
 
     componentWillMount() {
         // Get network provider and web3 instance.
@@ -112,7 +113,7 @@ class App extends Component<{}, AppState> {
     web3Call = async (
         func: (
             accounts: Array<string>,
-            generosityInstance: GenerosityInstanceType,
+            generosityInstance: GenerosityInstanceType
         ) => void | Promise<void>
     ): Promise<void> => {
         const { web3, generosity } = this.state;
@@ -149,7 +150,10 @@ class App extends Component<{}, AppState> {
      *       In the future this should be cached off-chain by subscribing to transactions with this
      *       conract address.
      */
-    readReach = async (addr: string, instance: GenerosityInstanceType): Promise<number> => {
+    readReach = async (
+        addr: string,
+        instance: GenerosityInstanceType
+    ): Promise<number> => {
         const first = await instance.llIndex.call("0x0");
         let curr = first;
         if (0 === parseInt(curr)) {
@@ -164,56 +168,79 @@ class App extends Component<{}, AppState> {
             }
             curr = await instance.llIndex.call(curr);
         } while (curr !== first);
-        return reach
-    }
+        return reach;
+    };
 
-    handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
-        if (this.addressInput != null) {
-            const { addressInput } = this;
-            this.giveToAddress(addressInput.value);
-        }
-        event.preventDefault();
+    handleSubmit = ({ address }: { address: string }) => this.giveToAddress(address);
+
+    handleClick = (e: any) => {
+        this.setState({
+            current: e.key
+        });
     };
 
     render() {
+        const selected = this.state.current;
         return (
-            <div className="App">
-                <nav className="navbar pure-menu pure-menu-horizontal">
-                    <a href="#" className="pure-menu-heading pure-menu-link">
-                        Truffle Box
-                    </a>
-                </nav>
-                <main className="container">
-                    <div className="pure-g">
-                        <div className="pure-u-1-1">
+            <Layout className="layout" style={{ minHeight: "100vh" }}>
+                <Header>
+                    <HomeIcon />
+                    <Menu
+                        theme="dark"
+                        onClick={this.handleClick}
+                        mode="horizontal"
+                        selectedKeys={[selected]}
+                        style={{ lineHeight: "64px" }}
+                    >
+                        <Menu.Item key="reach">
+                            <Icon type="rocket" /> Reach
+                        </Menu.Item>
+                        <Menu.Item key="give">
+                            <Icon type="mail" /> Give
+                        </Menu.Item>
+                        <Menu.Item key="receive">
+                            <Icon type="gift" /> Receive
+                        </Menu.Item>
+                    </Menu>
+                </Header>
+                <Content style={{ padding: "24px", flex: 1 }}>
+                    {selected === "reach" && (
+                        <p>
+                            Your generosity has reached {this.state.reach}{" "}
+                            person(s).{" "}
+                            <Tooltip title="Reach is total number of people in your generosity tree. For example, if you give to Joe and Joe gives to Alice and Bob then your reach would be 3.">
+                                <Icon type="info-circle" />
+                            </Tooltip>
+                        </p>
+                    )}
+                    {selected === "give" && (
+                        <div>
                             <p>
-                                Your generosity has reached{" "}
-                                {this.state.reach} person(s);
+                                Enter in your friend's ETH address and give them
+                                a 0.01 ETH gift!
                             </p>
-                            <form onSubmit={this.handleSubmit}>
-                                <input
-                                    ref={(el: ?HTMLInputElement) => {
-                                        this.addressInput = el;
-                                    }}
-                                    name="address"
-                                    placeholder="Enter target address here"
-                                    style={{ minWidth: "250px" }}
-                                />
-                                <input type="submit" value="Send" />
-                            </form>
+                            <GenerosityForm onSubmit={this.handleSubmit} />
+                        </div>
+                    )}
+                    {selected === "receive" && (
+                        <div>
                             <p>
                                 You have{" "}
                                 {this.state.gifts
                                     ? "a gift to receive!"
                                     : "no gifts."}
                             </p>
-                            <button onClick={this.handleWithdraw}>
+                            <Button onClick={this.handleWithdraw}>
                                 Receive
-                            </button>
+                            </Button>
                         </div>
-                    </div>
-                </main>
-            </div>
+                    )}
+                </Content>
+                <Footer style={{ textAlign: "center" }}>
+                    Created by Kenny Bambridge{" "}
+                    <a>https://github.com/k/crypto-generosity</a>
+                </Footer>
+            </Layout>
         );
     }
 }
