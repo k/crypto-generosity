@@ -3,7 +3,7 @@
 import * as React from "react";
 import { AutoForm, AutoField, SubmitField } from "uniforms-antd";
 import SimpleSchema from "simpl-schema";
-import { isAddress, toChecksumAddress } from "web3-utils";
+import { isAddress } from "web3-utils";
 
 type GenerosityFormProps = {
     onSubmit: (model: { address: string }) => any,

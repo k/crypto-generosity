@@ -57,6 +57,7 @@
     "react-dom": "^15.4.2",
     "simpl-schema": "^1.2.1",
     "styled-components": "^2.4.0",
+    "truffle-hdwallet-provider": "^0.0.5",
     "uniforms": "^1.22.2",
     "uniforms-antd": "^1.22.2",
     "web3": "^0.20.2",
