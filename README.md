@@ -30,6 +30,7 @@ This contract provides facilities for sending gifts to people and in the form of
   -  [ ] Attempt to give back to your giver
 - [ ] Use some form of identity on the blockchain to verify the givers and receivers
 - [ ] ~Switch the reputation gain to be on receipt of the gift~ [requires contract to be able to pay cost](https://blog.ethereum.org/2015/12/24/understanding-serenity-part-i-abstraction/)
+    - [ ] May be able to use [lambda-sensei](https://github.com/uport-project/lambda-sensui) (Thanks [Sean Breannan](https://www.linkedin.com/in/sbberk/))
 
 ## Optimizations
 - [ ] ~Move updating reputation to a separate function which pulls from contract funds so gas price doesn't increase too much~ [requires contract to be able to pay cost](https://blog.ethereum.org/2015/12/24/understanding-serenity-part-i-abstraction/)
