@@ -32,6 +32,7 @@ This contract provides facilities for sending gifts to people and in the form of
 - [ ] ~Switch the reputation gain to be on receipt of the gift~ [requires contract to be able to pay cost](https://blog.ethereum.org/2015/12/24/understanding-serenity-part-i-abstraction/)
     - [ ] May be able to use [lambda-sensei](https://github.com/uport-project/lambda-sensui) (Thanks [Sean Breannan](https://www.linkedin.com/in/sbberk/))
     - Remove [uPort auth checkx](https://github.com/uport-project/lambda-sensui/blob/46123eea783096c4f43e140cde427849bce38265/src/handlers/relay.js#L86) and [second one](https://github.com/uport-project/lambda-sensui/blob/46123eea783096c4f43e140cde427849bce38265/src/handlers/fund.js#L91) and don't forget the [nisaba call](https://github.com/uport-project/lambda-sensui/blob/46123eea783096c4f43e140cde427849bce38265/src/handlers/fund.js#L31)
+    - [ ] How to sign transaction before submitting to sensei?
 
 ## Optimizations
 - [ ] ~Move updating reputation to a separate function which pulls from contract funds so gas price doesn't increase too much~ [requires contract to be able to pay cost](https://blog.ethereum.org/2015/12/24/understanding-serenity-part-i-abstraction/)
