@@ -182,6 +182,8 @@ class App extends Component<{}, AppState> {
     render() {
         const selected = this.state.current;
         return (
+        <div>
+                <a href="https://github.com/k/crypto-generosity" style={{ position: "absolute", right: 0 }}><img width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_orange_ff7600.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1" /></a>
             <Layout className="layout" style={{ minHeight: "100vh" }}>
                 <Header>
                     <HomeIcon />
@@ -216,8 +218,7 @@ class App extends Component<{}, AppState> {
                     {selected === "give" && (
                         <div>
                             <p>
-                                Enter in your friend's ETH address and give them
-                                a 0.01 ETH gift!
+                                Enter in your friend's ETH address and give them a 0.01 ETH gift!
                             </p>
                             <GenerosityForm onSubmit={this.handleSubmit} />
                         </div>
@@ -237,10 +238,11 @@ class App extends Component<{}, AppState> {
                     )}
                 </Content>
                 <Footer style={{ textAlign: "center" }}>
-                    Created by Kenny Bambridge{" "}
-                    <a>https://github.com/k/crypto-generosity</a>
+                    Created by Kenny Bambridge.{' '}
+                    <a href="https://www.github.com/k/crypto-generosity" target="_top">Check out the code.</a>
                 </Footer>
             </Layout>
+        </div>
         );
     }
 }
