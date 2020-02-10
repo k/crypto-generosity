@@ -2,6 +2,8 @@
 
 Lets see how far your generosity reaches.
 
+NOTE: This project is not being maintained and is only deployed to Rinkeby testnet
+
 ## Generosity Contract
 
 This contract provides facilities for sending gifts to people and in the form of a small amount of ethereum and a kind message.
