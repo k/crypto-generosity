@@ -56,7 +56,7 @@
     "dotenv": "^2.0.0",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
-    "simpl-schema": "^1.2.1",
+    "simpl-schema": "^1.10.2",
     "styled-components": "^2.4.0",
     "truffle-hdwallet-provider": "^0.0.5",
     "uniforms": "^1.22.2",
